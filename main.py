@@ -1,45 +1,31 @@
-import re
-import ctranslate2
-import transformers
-from transformers import AutoTokenizer
+from typing import Annotated
 
-GLOSSARY = {}
+from fastapi import Body, FastAPI
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
+import src.translator as translator_mod
 
-def translate_with_masking(text: str, translator, tokenizer) -> str:
-    masked_text = text
-    restoration_map = {}
+tags_metadata = [{"name": "Translate", "description": "Endpoints to translate text"}]
 
-    for idx, (source_word, target_word) in enumerate(GLOSSARY.items()):
-        print(f"idx: {idx}, source_word: {source_word}, target_word: {target_word}")
-
-        pattern = re.compile(rf'\b{re.escape(source_word)}\b', re.IGNORECASE)
-        placeholder = f"__GLOSSARY_{idx}__"
-
-        if pattern.search(masked_text):
-            masked_text = pattern.sub(placeholder, masked_text)
-            restoration_map[placeholder] = target_word
-
-    source_tokens = tokenizer.convert_ids_to_tokens(tokenizer.encode(masked_text))
-    results = translator.translate_batch([source_tokens], beam_size=1)
-    target_tokens = results[0].hypotheses[0]
-    translated_text = tokenizer.decode(tokenizer.convert_tokens_to_ids(target_tokens))
-
-    print(f"translated_text: {translated_text}")
-
-    for placeholder, target_word in restoration_map.items():
-        translated_text = translated_text.replace(placeholder, target_word)
-
-    return translated_text
+app = FastAPI(
+    title="Translator custom",
+    openapi_tags=tags_metadata,
+    servers=[{"url": "http://127.0.0.1:8000", "description": "localhost endpoint"}],
+    default_response_class=JSONResponse,
+    root_path="/api/v1",
+)
 
 
-def main():
-    translator = ctranslate2.Translator("marian_ct2_model/")
-    tokenizer = AutoTokenizer.register(translator)
-    response = translate_with_masking("High throughput on each thread.", translator, tokenizer)
-
-    print(f'translate response: {response}')
+class TranslateWordRequest(BaseModel):
+    text: str
 
 
-if __name__ == "__main__":
-    main()
+@app.post("/translate-words", tags=["Translate"])
+def translate_text_post(request: Annotated[TranslateWordRequest, Body()]):
+    translated_text = translator_mod.translate(request.text)
+
+    return JSONResponse(
+        status_code=200,
+        content={"code": 200, "data": {"translate_text": translated_text}},
+    )
