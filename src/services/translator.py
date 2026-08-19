@@ -31,6 +31,4 @@ def translate(text: str) -> str:
 
     response = translate_text(text, tokenizer, translator)
 
-    print(f"\ntranslate response:\n\n{response}")
-
     return response
