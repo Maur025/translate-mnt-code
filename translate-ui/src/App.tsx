@@ -87,6 +87,7 @@ const translateToEs = async (
   }
 
   let accumulatedText = handleGetMarkdown(outputEditor) ?? "";
+  accumulatedText += "\n";
 
   while (true) {
     const { done, value } = await reader.read();
@@ -98,6 +99,28 @@ const translateToEs = async (
 
     handleSetMarkdown(outputEditor, accumulatedText);
   }
+};
+
+const handleOutputDownload = (editor: MDXEditorMethods | null) => {
+  if (!editor) {
+    console.error("Not found editor to download");
+    return;
+  }
+
+  const markdownContent = editor.getMarkdown();
+
+  const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf8;" });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "file.md";
+
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
 
 function App() {
@@ -120,13 +143,13 @@ function App() {
               Set new markdown
             </button>
 
-            <button
+            {/* <button
               className="border p-2 hover:border-gray-400 cursor-pointer"
               type="button"
               onClick={() => handleGetMarkdown(inputEditorRef.current)}
             >
               Get markdown
-            </button>
+            </button> */}
 
             <button
               className="border p-2 hover:border-gray-400 cursor-pointer"
@@ -142,6 +165,25 @@ function App() {
               onClick={() => translateToEs(inputEditorRef.current, outputEditorRef.current)}
             >
               Translate ES
+            </button>
+
+            <button
+              className="border p-2 hover:border-gray-400 cursor-pointer"
+              type="button"
+              onClick={() => handleOutputDownload(outputEditorRef.current)}
+            >
+              Download Output markdown
+            </button>
+
+            <button
+              className="border p-2 hover:border-gray-400 cursor-pointer"
+              type="button"
+              onClick={() => {
+                handleSetMarkdown(inputEditorRef.current, "");
+                handleSetMarkdown(outputEditorRef.current, "");
+              }}
+            >
+              Clear all editors
             </button>
           </div>
         </section>
