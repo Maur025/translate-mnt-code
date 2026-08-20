@@ -14,3 +14,4 @@ wheels/
 
 # model folder
 opus-mt-*-ct2/
+nllb-*-ct2/
