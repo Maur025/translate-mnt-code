@@ -37,12 +37,12 @@ interface Props {
 
 const EditorComponent = ({ editorReference }: Props) => {
   return (
-    <div className="mt-4 border h-11/12 overflow-y-auto flex-1" lang="es" spellCheck>
+    <div className="mt-4 border h-11/12 overflow-y-auto flex-1 rounded-lg" lang="es" spellCheck>
       <MDXEditor
         className="dark-theme dark-editor"
         contentEditableClassName=""
         ref={editorReference}
-        markdown="Hello world"
+        markdown=""
         spellCheck
         plugins={[
           headingsPlugin(),

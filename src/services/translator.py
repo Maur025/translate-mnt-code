@@ -1,5 +1,6 @@
 import os
 import re
+from collections.abc import Generator
 
 import ctranslate2
 from dotenv import load_dotenv
@@ -51,8 +52,6 @@ def translate_text(text: str) -> str:
     if not non_empty_sentences:
         return text
 
-    print(non_empty_sentences)
-
     tokens_batch = [
         tokenizer.convert_ids_to_tokens(tokenizer.encode(ne_sentence))
         for ne_sentence in non_empty_sentences
@@ -84,3 +83,35 @@ def translate_text(text: str) -> str:
     final_translation = "".join(translated_sentences)
     print(f"\n{final_translation}")
     return final_translation
+
+
+def translate_text_stream(text: str) -> Generator[str]:
+    sentences = split_into_sentences(text)
+
+    for sentence in sentences:
+        if not sentence.strip():
+            yield "\n\n"
+            continue
+
+        print(f"{sentence}\n")
+
+        tokens = tokenizer.convert_ids_to_tokens(tokenizer.encode(sentence))
+
+        results = translator.translate_batch(
+            [tokens],
+            target_prefix=[["spa_Latn"]],
+            beam_size=5,
+            repetition_penalty=1.1,
+            max_decoding_length=512,
+        )
+
+        target_tokens = results[0].hypotheses[0]
+
+        if target_tokens and target_tokens[0] == "spa_Latn":
+            target_tokens = target_tokens[1:]
+
+        translated_text = tokenizer.decode(
+            tokenizer.convert_tokens_to_ids(target_tokens)
+        )
+
+        yield translated_text + " "

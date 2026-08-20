@@ -50,27 +50,54 @@ const translateToEs = async (
   const inputRawText = handleGetMarkdown(inputEditor);
   console.log(inputRawText);
 
-  const payload = { text: inputRawText };
+  // const response = await fetch("http://127.0.0.1:8000/api/v1/translate", {
+  //   method: "post",
+  //   headers: {
+  //     "content-Type": "application/json",
+  //   },
+  //   body: JSON.stringify(payload),
+  // });
 
-  const response = await fetch("http://127.0.0.1:8000/api/v1/translate", {
-    method: "post",
+  const response = await fetch("http://127.0.0.1:8000/api/v1/translate/stream/", {
+    method: "POST",
     headers: {
       "content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ text: inputRawText }),
   });
 
   if (!response.ok) {
     console.error("Error en la petición");
   }
 
-  const dataResponse = await response.json();
-  const outputText = dataResponse.data?.translate_text;
+  // const dataResponse = await response.json();
+  // const outputText = dataResponse.data?.translate_text;
 
-  console.log(dataResponse);
+  // console.log(dataResponse);
 
-  // handleSetMarkdown(outputEditor, outputText);
-  outputEditor.insertMarkdown(outputText);
+  // // handleSetMarkdown(outputEditor, outputText);
+  // outputEditor.insertMarkdown(outputText);
+
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+
+  if (!reader) {
+    console.info("empty stream response");
+    return;
+  }
+
+  let accumulatedText = handleGetMarkdown(outputEditor) ?? "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    accumulatedText += chunk;
+
+    handleSetMarkdown(outputEditor, accumulatedText);
+  }
 };
 
 function App() {
