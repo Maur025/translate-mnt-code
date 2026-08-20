@@ -100,7 +100,7 @@ def translate_text_stream(text: str) -> Generator[str]:
         results = translator.translate_batch(
             [tokens],
             target_prefix=[["spa_Latn"]],
-            beam_size=5,
+            beam_size=4,
             repetition_penalty=1.1,
             max_decoding_length=512,
         )
