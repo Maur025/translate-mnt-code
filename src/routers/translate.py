@@ -14,6 +14,6 @@ class TranslateWordRequest(BaseModel):
 
 @router.post("/")
 def translate_text_post(request: Annotated[TranslateWordRequest, Body()]):
-    translated_text = translator_mod.translate(request.text)
+    translated_text = translator_mod.translate_text(request.text)
 
     return {"code": 200, "data": {"translate_text": translated_text}}
